@@ -8,7 +8,7 @@ import random          # 用來產生隨機角度
 # 設定網頁標題
 st.set_page_config(page_title="公司自動化蓋章系統", layout="wide")
 
-st.title("⚖️ 綠色辦公：自動化 PDF 蓋章工具 (逼真版)")
+st.title("⚖️ 綠色辦公：自動化 PDF 蓋章工具")
 st.write("上傳多個 PDF 工單，系統將自動於右下角蓋章，並支援角度傾斜與隨機微調。")
 
 # --- 側邊欄控制 ---
