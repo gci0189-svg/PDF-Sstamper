@@ -13,10 +13,7 @@ st.title("⚖️ 自動化處理：蓋章 + 自訂報價單號")
 # --- 側邊欄 ---
 with st.sidebar:
     st.header("1️⃣ 報價單號位置微調")
-    st.info("預設已往左下角移動約 2 公分。若想微調可拉動下方滑桿。")
-    # 原始 X 是 400，減 60 約等於往左 2 公分
     text_x = st.slider("左右位置 (越小越靠左)", 100, 500, 340)
-    # 原始 Y 是 30，加 60 約等於往下 2 公分
     text_y = st.slider("上下位置 (越大越靠下)", 10, 200, 90)
 
     st.header("2️⃣ 印章設定")
@@ -31,34 +28,42 @@ with st.sidebar:
 pdfs = st.file_uploader("請選擇 PDF 工單", type="pdf", accept_multiple_files=True)
 
 if pdfs:
-    # 建立一個表格，讓使用者針對每個檔案輸入單號
+    # 建立表格輸入區
     data = {"檔案名稱":[f.name for f in pdfs], "報價單號": ["" for _ in pdfs]}
     df = pd.DataFrame(data)
     
     st.write("### 📝 請在下方表格輸入每一份檔案的報價單號：")
+    # 使用 data_editor，使用者每輸入一次，系統就會自動更新底下的預覽
     edited_df = st.data_editor(df, num_rows="fixed", use_container_width=True)
 
-if pdfs and user_stamp and st.button("🚀 開始處理"):
+# 只要有檔案和印章，就直接啟動處理與預覽 (移除原本的按鈕)
+if pdfs and user_stamp:
     original_pil_img = Image.open(BytesIO(user_stamp.read())).convert("RGBA")
     zip_buffer = BytesIO()
     
+    st.write("---")
+    st.write("### 👀 第一頁即時預覽 (輸入單號或調位置會自動更新)")
+    cols = st.columns(3)
+    
     with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
         for i, f in enumerate(pdfs):
-            doc = fitz.open(stream=f.read(), filetype="pdf")
-            page = doc[-1]
+            # 使用 getvalue() 確保重複讀取不會報錯
+            doc = fitz.open(stream=f.getvalue(), filetype="pdf")
             
-            # --- 完美處理報價單號與字距 ---
+            # ⭐️ 關鍵修改：將 doc[-1] 改成 doc[0]，指定只在「第一頁」蓋章與寫字
+            page = doc[0] 
+            
+            # --- 處理報價單號 ---
             input_number = str(edited_df.iloc[i]['報價單號']).strip()
             
-            # 第一段：只印出「報價單號: 」(使用中文字體)
+            # 寫入「報價單號: 」(中文)
             page.insert_text(fitz.Point(text_x, text_y), "報價單號: ", fontsize=12, fontname="china-ss", color=(0, 0, 0))
             
-            # 第二段：印出「輸入的數字」(使用漂亮的標準英文字體 helv，解決字距太寬的問題)
-            # X 座標加上 65，剛好接在「報價單號: 」的後面
+            # 寫入數字 (英文標準字體)
             if input_number:
                 page.insert_text(fitz.Point(text_x + 65, text_y), input_number, fontsize=12, fontname="helv", color=(0, 0, 0))
             
-            # --- 蓋章邏輯 ---
+            # --- 處理蓋章 ---
             if use_random:
                 angle = base_angle + random.randint(-5, 5)
             else:
@@ -73,11 +78,19 @@ if pdfs and user_stamp and st.button("🚀 開始處理"):
             rect = fitz.Rect(W - stamp_w - 50, H - stamp_w - 50, W - 50, H - 50)
             page.insert_image(rect, stream=img_byte_arr.getvalue())
             
-            # 存檔
+            # --- 產生預覽圖 ---
+            pix = page.get_pixmap(dpi=72)
+            preview_bytes = pix.tobytes("png")
+            
+            with cols[i % 3]:
+                with st.expander(f"📄 預覽：{f.name[:10]}..."):
+                    st.image(preview_bytes, use_container_width=True)
+            
+            # --- 存入壓縮檔 ---
             pdf_out = BytesIO()
             doc.save(pdf_out)
             zip_file.writestr(f"processed_{f.name}", pdf_out.getvalue())
             doc.close()
             
-    st.success("✅ 處理完成！請點擊下方按鈕下載：")
-    st.download_button("📥 下載所有處理後的檔案 (ZIP)", zip_buffer.getvalue(), "processed_files.zip", type="primary")
+    st.success("✅ 所有檔案已備妥！請點擊下方按鈕下載：")
+    st.download_button("📥 點此下載所有處理後的工單 (ZIP)", zip_buffer.getvalue(), "processed_files.zip", type="primary")
