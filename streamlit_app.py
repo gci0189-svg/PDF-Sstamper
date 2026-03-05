@@ -14,7 +14,7 @@ st.title("⚖️ 自動化處理：蓋章 + 自訂報價單號")
 with st.sidebar:
     st.header("1️⃣ 報價單號位置微調")
     text_x = st.slider("左右位置 (越小越靠左)", 100, 500, 340)
-    text_y = st.slider("上下位置 (越大越靠下)", 10, 200, 90)
+    text_y = st.slider("上下位置 (越大越靠下)", 10, 200, 20)
 
     st.header("2️⃣ 印章設定")
     user_stamp = st.file_uploader("上傳透明底印章 (PNG)", type=["png"])
