@@ -89,7 +89,7 @@ if pdfs and user_stamp:
             # --- 存入壓縮檔 ---
             pdf_out = BytesIO()
             doc.save(pdf_out)
-            zip_file.writestr(f"processed_{f.name}", pdf_out.getvalue())
+            zip_file.writestr(f"{f.name}(報價收費工單)", pdf_out.getvalue())
             doc.close()
             
     st.success("✅ 所有檔案已備妥！請點擊下方按鈕下載：")
