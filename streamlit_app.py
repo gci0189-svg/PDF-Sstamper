@@ -33,10 +33,8 @@ if pdfs:
     df = pd.DataFrame(data)
     
     st.write("### 📝 請在下方表格輸入每一份檔案的報價單號：")
-    # 使用 data_editor，使用者每輸入一次，系統就會自動更新底下的預覽
     edited_df = st.data_editor(df, num_rows="fixed", use_container_width=True)
 
-# 只要有檔案和印章，就直接啟動處理與預覽 (移除原本的按鈕)
 if pdfs and user_stamp:
     original_pil_img = Image.open(BytesIO(user_stamp.read())).convert("RGBA")
     zip_buffer = BytesIO()
@@ -47,19 +45,14 @@ if pdfs and user_stamp:
     
     with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
         for i, f in enumerate(pdfs):
-            # 使用 getvalue() 確保重複讀取不會報錯
             doc = fitz.open(stream=f.getvalue(), filetype="pdf")
-            
-            # ⭐️ 關鍵修改：將 doc[-1] 改成 doc[0]，指定只在「第一頁」蓋章與寫字
             page = doc[0] 
             
             # --- 處理報價單號 ---
             input_number = str(edited_df.iloc[i]['報價單號']).strip()
             
-            # 寫入「報價單號: 」(中文)
             page.insert_text(fitz.Point(text_x, text_y), "報價單號: ", fontsize=12, fontname="china-ss", color=(0, 0, 0))
             
-            # 寫入數字 (英文標準字體)
             if input_number:
                 page.insert_text(fitz.Point(text_x + 65, text_y), input_number, fontsize=12, fontname="helv", color=(0, 0, 0))
             
@@ -86,10 +79,18 @@ if pdfs and user_stamp:
                 with st.expander(f"📄 預覽：{f.name[:10]}..."):
                     st.image(preview_bytes, use_container_width=True)
             
-            # --- 存入壓縮檔 ---
+            # --- 存入壓縮檔 (✨ 這裡修改了檔名邏輯) ---
             pdf_out = BytesIO()
             doc.save(pdf_out)
-            zip_file.writestr(f"{f.name}(報價收費工單)", pdf_out.getvalue())
+            
+            # 1. 拿掉原檔名的 ".pdf" (例如：把 "玉山銀行工單.pdf" 變成 "玉山銀行工單")
+            original_name_without_ext = f.name.rsplit('.', 1)[0]
+            
+            # 2. 組合新檔名：原檔名 + (報價工單) + .pdf
+            new_file_name = f"{original_name_without_ext}(報價工單).pdf"
+            
+            # 3. 寫入壓縮檔
+            zip_file.writestr(new_file_name, pdf_out.getvalue())
             doc.close()
             
     st.success("✅ 所有檔案已備妥！請點擊下方按鈕下載：")
