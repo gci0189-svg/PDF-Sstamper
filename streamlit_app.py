@@ -8,7 +8,7 @@ import random
 
 st.set_page_config(page_title="專業工單處理系統", layout="wide")
 
-st.title("⚖️ 自動化處理：蓋章 + 自訂報價單號")
+st.title("⚖️ 自動化處理：自訂報價單號&蓋章")
 
 # --- 側邊欄 ---
 with st.sidebar:
