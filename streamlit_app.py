@@ -54,7 +54,7 @@ if pdfs and user_stamp:
             page.insert_text(fitz.Point(text_x, text_y), "報價單號: ", fontsize=12, fontname="china-ss", color=(0, 0, 0))
             
             if input_number:
-                page.insert_text(fitz.Point(text_x + 65, text_y), input_number, fontsize=12, fontname="helv", color=(0, 0, 0))
+                page.insert_text(fitz.Point(text_x + 65, text_y), input_number, fontsize=16, fontname="helv", color=(0, 0, 0))
             
             # --- 處理蓋章 ---
             if use_random:
