@@ -20,8 +20,8 @@ with st.sidebar:
     user_stamp = st.file_uploader("上傳透明底印章 (PNG)", type=["png"])
     scale = st.slider("印章大小比例", 0.05, 0.4, 0.12)
     
-    st.header("3️⃣ 印章防偽與逼真度")
-    base_angle = st.slider("基準傾斜角度", -45, 45, -15)
+    st.header("3️⃣ 印章傾斜角度")
+    base_angle = st.slider("傾斜角度", -45, 45, -15)
     use_random = st.checkbox("🎲 開啟隨機微調角度", value=True)
 
 # --- 主畫面：檔案上傳 ---
